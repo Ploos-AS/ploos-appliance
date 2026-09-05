@@ -1,0 +1,18 @@
+[Unit]
+Description=Ploos Appliance Platform Agent
+After=network-online.target
+Wants=network-online.target
+ConditionPathIsDirectory=/data
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/lib/ploos-appliance/agent
+RemainAfterExit=yes
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+ReadWritePaths=/data
+
+[Install]
+WantedBy=multi-user.target

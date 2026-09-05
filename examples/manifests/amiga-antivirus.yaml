@@ -1,0 +1,15 @@
+apiVersion: ploos.no/v0
+kind: Appliance
+metadata:
+  id: amiga-antivirus
+  name: Amiga Antivirus Appliance
+  version: 0.1.0
+runtime:
+  type: oci
+  image: ghcr.io/ploos-as/amiga-antivirus:0.1.0
+persistence:
+  root: /data
+capabilities:
+  usb: true
+  web: true
+  network: true
