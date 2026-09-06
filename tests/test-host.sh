@@ -3,7 +3,10 @@ set -eu
 
 ROOT=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
 TMP=$(mktemp -d)
-trap 'rm -rf "$TMP"' EXIT
+cleanup() {
+    sudo rm -rf "$TMP"
+}
+trap cleanup EXIT HUP INT TERM
 mkdir -p "$TMP/bin" "$TMP/config" "$TMP/data"
 cp "$ROOT/examples/manifests/amiga-antivirus.yaml" "$TMP/config/appliance.yaml"
 
@@ -84,7 +87,7 @@ sudo env \
     PLOOS_MANIFEST_SOURCE="$ROOT/examples/manifests/test-workload.yaml" \
     PLOOS_SKIP_SYSTEMD=1 \
     sh "$ROOT/scripts/install.sh" >/dev/null
-cmp "$ROOT/examples/manifests/test-workload.yaml" "$PROFILE_CONFIG/appliance.yaml"
+sudo cmp "$ROOT/examples/manifests/test-workload.yaml" "$PROFILE_CONFIG/appliance.yaml"
 
 # Existing configuration must never be replaced by a later profile request.
 sudo env \
@@ -94,7 +97,7 @@ sudo env \
     PLOOS_MANIFEST_SOURCE="$ROOT/examples/manifests/amiga-antivirus.yaml" \
     PLOOS_SKIP_SYSTEMD=1 \
     sh "$ROOT/scripts/install.sh" >/dev/null
-cmp "$ROOT/examples/manifests/test-workload.yaml" "$PROFILE_CONFIG/appliance.yaml"
+sudo cmp "$ROOT/examples/manifests/test-workload.yaml" "$PROFILE_CONFIG/appliance.yaml"
 
 # Bootstrap policy is testable without mutating the CI host: unsupported
 # runtime values must fail before package or install operations begin.
