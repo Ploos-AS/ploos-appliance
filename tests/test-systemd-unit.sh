@@ -18,6 +18,34 @@ grep -q '^ReadWritePaths=-/run/containers$' "$UNIT"
 grep -q '^ReadWritePaths=-/run/libpod$' "$UNIT"
 
 if command -v systemd-analyze >/dev/null 2>&1; then
+    created_agent=0
+    created_cli=0
+
+    cleanup() {
+        if [ "$created_agent" -eq 1 ]; then
+            rm -f /usr/local/lib/ploos-appliance/agent
+            rmdir /usr/local/lib/ploos-appliance 2>/dev/null || true
+        fi
+        if [ "$created_cli" -eq 1 ]; then
+            rm -f /usr/local/bin/ploos-appliance
+        fi
+    }
+    trap cleanup EXIT HUP INT TERM
+
+    if [ ! -x /usr/local/lib/ploos-appliance/agent ]; then
+        mkdir -p /usr/local/lib/ploos-appliance
+        printf '#!/bin/sh\nexit 0\n' > /usr/local/lib/ploos-appliance/agent
+        chmod 0755 /usr/local/lib/ploos-appliance/agent
+        created_agent=1
+    fi
+
+    if [ ! -x /usr/local/bin/ploos-appliance ]; then
+        mkdir -p /usr/local/bin
+        printf '#!/bin/sh\nexit 0\n' > /usr/local/bin/ploos-appliance
+        chmod 0755 /usr/local/bin/ploos-appliance
+        created_cli=1
+    fi
+
     systemd-analyze verify "$UNIT"
 fi
 
