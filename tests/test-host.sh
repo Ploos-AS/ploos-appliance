@@ -62,6 +62,13 @@ printf '%s\n' "$status" | grep -q '^workload=present$'
 sh "$ROOT/bin/ploos-appliance" restart
 sh "$ROOT/bin/ploos-appliance" stop
 
+# M1.7: systemd is the lifecycle owner. The workload container must not
+# install its own runtime restart policy.
+if grep -q -- '--restart' "$ROOT/bin/ploos-appliance"; then
+    echo "container runtime restart policy still configured" >&2
+    exit 1
+fi
+
 # M1.5: a fresh platform install must not silently select a workload.
 SAFE_PREFIX="$TMP/safe-prefix"
 SAFE_CONFIG="$TMP/safe-config"
@@ -76,7 +83,7 @@ sudo env \
 [ -x "$SAFE_PREFIX/bin/ploos-appliance" ]
 [ -d "$SAFE_DATA" ]
 
-# An explicitly selected profile must be installed unchanged.
+# An explicitly selected profile and runtime must be installed unchanged.
 PROFILE_PREFIX="$TMP/profile-prefix"
 PROFILE_CONFIG="$TMP/profile-config"
 PROFILE_DATA="$TMP/profile-data"
@@ -85,9 +92,11 @@ sudo env \
     PLOOS_CONFIG_DIR="$PROFILE_CONFIG" \
     PLOOS_DATA_ROOT="$PROFILE_DATA" \
     PLOOS_MANIFEST_SOURCE="$ROOT/examples/manifests/test-workload.yaml" \
+    PLOOS_RUNTIME_CHOICE=podman \
     PLOOS_SKIP_SYSTEMD=1 \
     sh "$ROOT/scripts/install.sh" >/dev/null
 sudo cmp "$ROOT/examples/manifests/test-workload.yaml" "$PROFILE_CONFIG/appliance.yaml"
+printf 'PLOOS_RUNTIME=podman\n' | sudo cmp - "$PROFILE_CONFIG/runtime.env"
 
 # Existing configuration must never be replaced by a later profile request.
 sudo env \
@@ -95,6 +104,7 @@ sudo env \
     PLOOS_CONFIG_DIR="$PROFILE_CONFIG" \
     PLOOS_DATA_ROOT="$PROFILE_DATA" \
     PLOOS_MANIFEST_SOURCE="$ROOT/examples/manifests/amiga-antivirus.yaml" \
+    PLOOS_RUNTIME_CHOICE=podman \
     PLOOS_SKIP_SYSTEMD=1 \
     sh "$ROOT/scripts/install.sh" >/dev/null
 sudo cmp "$ROOT/examples/manifests/test-workload.yaml" "$PROFILE_CONFIG/appliance.yaml"
