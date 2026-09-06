@@ -6,6 +6,8 @@ ConditionPathIsDirectory=/data
 
 [Service]
 Type=oneshot
+RuntimeDirectory=netns
+RuntimeDirectoryMode=0755
 ExecStart=/usr/local/lib/ploos-appliance/agent
 ExecStop=/usr/local/bin/ploos-appliance stop
 RemainAfterExit=yes
@@ -20,7 +22,7 @@ ReadWritePaths=-/var/lib/containers
 ReadWritePaths=-/run/containers
 ReadWritePaths=-/run/libpod
 ReadWritePaths=/run/lock
-ReadWritePaths=-/run/netns
+ReadWritePaths=/run/netns
 
 [Install]
 WantedBy=multi-user.target
