@@ -1,0 +1,74 @@
+#!/bin/sh
+set -eu
+
+CONFIG_DIR=${PLOOS_CONFIG_DIR:-/etc/ploos-appliance}
+DATA_ROOT=${PLOOS_DATA_ROOT:-/data}
+MANIFEST=${PLOOS_MANIFEST:-${CONFIG_DIR}/appliance.yaml}
+VALIDATOR=${PLOOS_VALIDATOR:-/usr/local/lib/ploos-appliance/validate-manifest.py}
+CONTAINER_NAME=${PLOOS_CONTAINER_NAME:-ploos-appliance-workload}
+
+runtime() {
+    if [ -n "${PLOOS_RUNTIME:-}" ]; then
+        printf '%s\n' "$PLOOS_RUNTIME"
+    elif command -v podman >/dev/null 2>&1; then
+        printf '%s\n' podman
+    elif command -v docker >/dev/null 2>&1; then
+        printf '%s\n' docker
+    else
+        echo "no supported OCI runtime found (podman or docker)" >&2
+        exit 1
+    fi
+}
+
+manifest_value() {
+    python3 "$VALIDATOR" --manifest "$MANIFEST" --schema "${PLOOS_SCHEMA:-/usr/local/lib/ploos-appliance/appliance.schema.json}" --get "$1"
+}
+
+validate() {
+    python3 "$VALIDATOR" --manifest "$MANIFEST" --schema "${PLOOS_SCHEMA:-/usr/local/lib/ploos-appliance/appliance.schema.json}"
+}
+
+start() {
+    validate >/dev/null
+    image=$(manifest_value runtime.image)
+    root=$(manifest_value persistence.root)
+    [ "$root" = "/data" ] || { echo "unsupported persistence root: $root" >&2; exit 1; }
+    install -d -m 0750 "$DATA_ROOT"
+    r=$(runtime)
+    if "$r" inspect "$CONTAINER_NAME" >/dev/null 2>&1; then
+        "$r" start "$CONTAINER_NAME" >/dev/null
+    else
+        "$r" run -d --name "$CONTAINER_NAME" --restart unless-stopped -v "$DATA_ROOT:/data" "$image" >/dev/null
+    fi
+}
+
+stop() {
+    r=$(runtime)
+    "$r" stop "$CONTAINER_NAME" >/dev/null
+}
+
+restart() {
+    r=$(runtime)
+    "$r" restart "$CONTAINER_NAME" >/dev/null
+}
+
+status() {
+    validate >/dev/null
+    r=$(runtime)
+    image=$(manifest_value runtime.image)
+    printf 'manifest=valid\nruntime=%s\nimage=%s\n' "$r" "$image"
+    if "$r" inspect "$CONTAINER_NAME" >/dev/null 2>&1; then
+        printf 'workload=present\n'
+    else
+        printf 'workload=absent\n'
+    fi
+}
+
+case "${1:-}" in
+    validate) validate ;;
+    start) start ;;
+    stop) stop ;;
+    restart) restart ;;
+    status) status ;;
+    *) echo "usage: ploos-appliance {validate|start|stop|restart|status}" >&2; exit 2 ;;
+esac
