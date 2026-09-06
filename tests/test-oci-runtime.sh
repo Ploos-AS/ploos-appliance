@@ -13,7 +13,7 @@ command -v "$RUNTIME" >/dev/null 2>&1 || {
     exit 77
 }
 
-"$RUNTIME" build -t "$IMAGE" "$ROOT/test-workload"
+"$RUNTIME" build -f "$ROOT/test-workload/Containerfile" -t "$IMAGE" "$ROOT/test-workload"
 mkdir -p "$TMP/config" "$TMP/data"
 cp "$ROOT/examples/manifests/test-workload.yaml" "$TMP/config/appliance.yaml"
 
