@@ -51,7 +51,10 @@ fi
 install -d -m 0750 "$DATA_ROOT"
 
 log "installing Ploos Appliance platform"
-PLOOS_DATA_ROOT="$DATA_ROOT" PLOOS_MANIFEST_SOURCE="$MANIFEST_SOURCE" sh "$SCRIPT_DIR/install.sh"
+PLOOS_DATA_ROOT="$DATA_ROOT" \
+PLOOS_MANIFEST_SOURCE="$MANIFEST_SOURCE" \
+PLOOS_RUNTIME_CHOICE="$RUNTIME" \
+sh "$SCRIPT_DIR/install.sh"
 
 if [ -f /etc/ploos-appliance/appliance.yaml ]; then
     log "validating installed appliance profile"
