@@ -19,6 +19,7 @@ ReadWritePaths=/data
 ReadWritePaths=-/var/lib/containers
 ReadWritePaths=-/run/containers
 ReadWritePaths=-/run/libpod
+ReadWritePaths=/run/lock
 
 [Install]
 WantedBy=multi-user.target
