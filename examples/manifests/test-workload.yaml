@@ -1,0 +1,15 @@
+apiVersion: ploos.no/v0
+kind: Appliance
+metadata:
+  id: platform-test-workload
+  name: Ploos Appliance Platform Test Workload
+  version: 0.1.0
+runtime:
+  type: oci
+  image: localhost/ploos-appliance-test:0.1.0
+persistence:
+  root: /data
+capabilities:
+  usb: false
+  web: false
+  network: false
