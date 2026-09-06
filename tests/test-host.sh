@@ -59,4 +59,18 @@ printf '%s\n' "$status" | grep -q '^workload=present$'
 sh "$ROOT/bin/ploos-appliance" restart
 sh "$ROOT/bin/ploos-appliance" stop
 
+# Bootstrap policy is testable without mutating the CI host: unsupported
+# runtime values must fail before package or install operations begin.
+if PLOOS_RUNTIME_CHOICE=invalid PLOOS_ALLOW_NON_DIETPI=1 PLOOS_SKIP_PACKAGES=1 \
+    PLOOS_DATA_ROOT="$TMP/bootstrap-data" sh "$ROOT/scripts/bootstrap.sh" >/dev/null 2>&1; then
+    echo "bootstrap accepted invalid runtime" >&2
+    exit 1
+fi
+
+# The DietPi hook must fail clearly when its release bundle is absent.
+if PLOOS_BOOTSTRAP_SOURCE="$TMP/missing" sh "$ROOT/dietpi/Automation_Custom_Script.sh" >/dev/null 2>&1; then
+    echo "DietPi hook accepted missing bootstrap source" >&2
+    exit 1
+fi
+
 echo "host lifecycle tests: PASS"
