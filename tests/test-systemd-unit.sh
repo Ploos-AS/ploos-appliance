@@ -5,7 +5,7 @@ ROOT=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
 UNIT="$ROOT/systemd/ploos-appliance-agent.service"
 
 grep -q '^Type=oneshot$' "$UNIT"
-grep -q '^RuntimeDirectory=netns$' "$UNIT"
+grep -q '^RuntimeDirectory=netns crun$' "$UNIT"
 grep -q '^RuntimeDirectoryMode=0755$' "$UNIT"
 grep -q '^ExecStart=/usr/local/lib/ploos-appliance/agent$' "$UNIT"
 grep -q '^ExecStop=/usr/local/bin/ploos-appliance stop$' "$UNIT"
@@ -20,6 +20,7 @@ grep -q '^ReadWritePaths=-/run/containers$' "$UNIT"
 grep -q '^ReadWritePaths=-/run/libpod$' "$UNIT"
 grep -q '^ReadWritePaths=/run/lock$' "$UNIT"
 grep -q '^ReadWritePaths=/run/netns$' "$UNIT"
+grep -q '^ReadWritePaths=/run/crun$' "$UNIT"
 
 if command -v systemd-analyze >/dev/null 2>&1; then
     created_agent=0
