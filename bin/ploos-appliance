@@ -6,10 +6,20 @@ DATA_ROOT=${PLOOS_DATA_ROOT:-/data}
 MANIFEST=${PLOOS_MANIFEST:-${CONFIG_DIR}/appliance.yaml}
 VALIDATOR=${PLOOS_VALIDATOR:-/usr/local/lib/ploos-appliance/validate-manifest.py}
 CONTAINER_NAME=${PLOOS_CONTAINER_NAME:-ploos-appliance-workload}
+RUNTIME_ENV=${PLOOS_RUNTIME_ENV:-${CONFIG_DIR}/runtime.env}
+
+if [ -z "${PLOOS_RUNTIME:-}" ] && [ -r "$RUNTIME_ENV" ]; then
+    # runtime.env is installed root-owned by the platform installer.
+    # shellcheck disable=SC1090
+    . "$RUNTIME_ENV"
+fi
 
 runtime() {
     if [ -n "${PLOOS_RUNTIME:-}" ]; then
-        printf '%s\n' "$PLOOS_RUNTIME"
+        case "$PLOOS_RUNTIME" in
+            podman|docker) printf '%s\n' "$PLOOS_RUNTIME" ;;
+            *) echo "unsupported OCI runtime configured: $PLOOS_RUNTIME" >&2; exit 1 ;;
+        esac
     elif command -v podman >/dev/null 2>&1; then
         printf '%s\n' podman
     elif command -v docker >/dev/null 2>&1; then
@@ -38,7 +48,7 @@ start() {
     if "$r" inspect "$CONTAINER_NAME" >/dev/null 2>&1; then
         "$r" start "$CONTAINER_NAME" >/dev/null
     else
-        "$r" run -d --name "$CONTAINER_NAME" --restart unless-stopped -v "$DATA_ROOT:/data" "$image" >/dev/null
+        "$r" run -d --name "$CONTAINER_NAME" -v "$DATA_ROOT:/data" "$image" >/dev/null
     fi
 }
 
