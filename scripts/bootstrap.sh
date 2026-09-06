@@ -4,6 +4,7 @@ set -eu
 DATA_ROOT=${PLOOS_DATA_ROOT:-/data}
 RUNTIME=${PLOOS_RUNTIME_CHOICE:-podman}
 SKIP_PACKAGES=${PLOOS_SKIP_PACKAGES:-0}
+MANIFEST_SOURCE=${PLOOS_MANIFEST_SOURCE:-}
 SCRIPT_DIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
 
 log() {
@@ -50,9 +51,12 @@ fi
 install -d -m 0750 "$DATA_ROOT"
 
 log "installing Ploos Appliance platform"
-PLOOS_DATA_ROOT="$DATA_ROOT" sh "$SCRIPT_DIR/install.sh"
+PLOOS_DATA_ROOT="$DATA_ROOT" PLOOS_MANIFEST_SOURCE="$MANIFEST_SOURCE" sh "$SCRIPT_DIR/install.sh"
 
-log "validating installed platform"
-/usr/local/bin/ploos-appliance validate
-
-log "bootstrap complete"
+if [ -f /etc/ploos-appliance/appliance.yaml ]; then
+    log "validating installed appliance profile"
+    /usr/local/bin/ploos-appliance validate
+    log "bootstrap complete; appliance profile configured"
+else
+    log "bootstrap complete; no appliance profile selected"
+fi
