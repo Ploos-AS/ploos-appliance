@@ -36,6 +36,17 @@ cleanup() {
 }
 trap cleanup EXIT HUP INT TERM
 
+show_diagnostics() {
+    echo "--- systemctl status ---" >&2
+    systemctl status "$SERVICE" --no-pager -l >&2 || true
+    echo "--- journalctl ---" >&2
+    journalctl -u "$SERVICE" --no-pager -n 100 >&2 || true
+    echo "--- podman info ---" >&2
+    podman info >&2 || true
+    echo "--- podman ps -a ---" >&2
+    podman ps -a >&2 || true
+}
+
 # Start from a clean ephemeral-host state.
 cleanup
 trap cleanup EXIT HUP INT TERM
@@ -52,7 +63,10 @@ PLOOS_MANIFEST_SOURCE="$ROOT/examples/manifests/test-workload.yaml" \
 systemctl is-enabled --quiet "$SERVICE"
 /usr/local/bin/ploos-appliance validate >/dev/null
 
-systemctl start "$SERVICE"
+if ! systemctl start "$SERVICE"; then
+    show_diagnostics
+    exit 1
+fi
 systemctl is-active --quiet "$SERVICE"
 
 ready=0
@@ -66,8 +80,7 @@ while [ "$i" -lt 20 ]; do
     sleep 1
 done
 [ "$ready" -eq 1 ] || {
-    systemctl status "$SERVICE" --no-pager || true
-    podman ps -a || true
+    show_diagnostics
     echo "workload did not become ready" >&2
     exit 1
 }
@@ -76,7 +89,10 @@ grep -qx 'ploos-appliance-test-workload' /data/workload.identity
 [ "$(cat /data/boot-count)" = 1 ]
 podman inspect "$CONTAINER" >/dev/null
 
-systemctl restart "$SERVICE"
+if ! systemctl restart "$SERVICE"; then
+    show_diagnostics
+    exit 1
+fi
 systemctl is-active --quiet "$SERVICE"
 
 restarted=0
@@ -90,8 +106,7 @@ while [ "$i" -lt 20 ]; do
     sleep 1
 done
 [ "$restarted" -eq 1 ] || {
-    systemctl status "$SERVICE" --no-pager || true
-    podman ps -a || true
+    show_diagnostics
     echo "workload did not recover after systemd restart" >&2
     exit 1
 }
