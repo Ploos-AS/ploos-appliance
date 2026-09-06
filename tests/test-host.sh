@@ -59,6 +59,43 @@ printf '%s\n' "$status" | grep -q '^workload=present$'
 sh "$ROOT/bin/ploos-appliance" restart
 sh "$ROOT/bin/ploos-appliance" stop
 
+# M1.5: a fresh platform install must not silently select a workload.
+SAFE_PREFIX="$TMP/safe-prefix"
+SAFE_CONFIG="$TMP/safe-config"
+SAFE_DATA="$TMP/safe-data"
+sudo env \
+    PLOOS_PREFIX="$SAFE_PREFIX" \
+    PLOOS_CONFIG_DIR="$SAFE_CONFIG" \
+    PLOOS_DATA_ROOT="$SAFE_DATA" \
+    PLOOS_SKIP_SYSTEMD=1 \
+    sh "$ROOT/scripts/install.sh" >/dev/null
+[ ! -e "$SAFE_CONFIG/appliance.yaml" ]
+[ -x "$SAFE_PREFIX/bin/ploos-appliance" ]
+[ -d "$SAFE_DATA" ]
+
+# An explicitly selected profile must be installed unchanged.
+PROFILE_PREFIX="$TMP/profile-prefix"
+PROFILE_CONFIG="$TMP/profile-config"
+PROFILE_DATA="$TMP/profile-data"
+sudo env \
+    PLOOS_PREFIX="$PROFILE_PREFIX" \
+    PLOOS_CONFIG_DIR="$PROFILE_CONFIG" \
+    PLOOS_DATA_ROOT="$PROFILE_DATA" \
+    PLOOS_MANIFEST_SOURCE="$ROOT/examples/manifests/test-workload.yaml" \
+    PLOOS_SKIP_SYSTEMD=1 \
+    sh "$ROOT/scripts/install.sh" >/dev/null
+cmp "$ROOT/examples/manifests/test-workload.yaml" "$PROFILE_CONFIG/appliance.yaml"
+
+# Existing configuration must never be replaced by a later profile request.
+sudo env \
+    PLOOS_PREFIX="$PROFILE_PREFIX" \
+    PLOOS_CONFIG_DIR="$PROFILE_CONFIG" \
+    PLOOS_DATA_ROOT="$PROFILE_DATA" \
+    PLOOS_MANIFEST_SOURCE="$ROOT/examples/manifests/amiga-antivirus.yaml" \
+    PLOOS_SKIP_SYSTEMD=1 \
+    sh "$ROOT/scripts/install.sh" >/dev/null
+cmp "$ROOT/examples/manifests/test-workload.yaml" "$PROFILE_CONFIG/appliance.yaml"
+
 # Bootstrap policy is testable without mutating the CI host: unsupported
 # runtime values must fail before package or install operations begin.
 if PLOOS_RUNTIME_CHOICE=invalid PLOOS_ALLOW_NON_DIETPI=1 PLOOS_SKIP_PACKAGES=1 \
