@@ -30,6 +30,7 @@ jobs:
           sh -n tests/test-host.sh
           sh -n tests/test-oci-runtime.sh
           sh -n tests/test-systemd-unit.sh
+          sh -n tests/test-systemd-runtime.sh
       - name: Check Python syntax
         run: python3 -m py_compile lib/validate-manifest.py
       - name: Check JSON schema syntax
@@ -42,5 +43,7 @@ jobs:
         run: sh tests/test-oci-runtime.sh docker
       - name: Qualify real Podman lifecycle
         run: sh tests/test-oci-runtime.sh podman
+      - name: Qualify systemd-managed Podman lifecycle
+        run: sudo sh tests/test-systemd-runtime.sh
       - name: Check whitespace
         run: git diff --check HEAD^
