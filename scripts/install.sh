@@ -5,6 +5,7 @@ PREFIX=${PLOOS_PREFIX:-/usr/local}
 CONFIG_DIR=${PLOOS_CONFIG_DIR:-/etc/ploos-appliance}
 DATA_ROOT=${PLOOS_DATA_ROOT:-/data}
 MANIFEST_SOURCE=${PLOOS_MANIFEST_SOURCE:-}
+SKIP_SYSTEMD=${PLOOS_SKIP_SYSTEMD:-0}
 SOURCE_DIR=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
 
 if [ "$(id -u)" -ne 0 ]; then
@@ -27,7 +28,7 @@ if [ -n "$MANIFEST_SOURCE" ] && [ ! -f "$CONFIG_DIR/appliance.yaml" ]; then
     install -m 0640 "$MANIFEST_SOURCE" "$CONFIG_DIR/appliance.yaml"
 fi
 
-if command -v systemctl >/dev/null 2>&1; then
+if [ "$SKIP_SYSTEMD" != 1 ] && command -v systemctl >/dev/null 2>&1; then
     install -m 0644 "$SOURCE_DIR/systemd/ploos-appliance-agent.service" /etc/systemd/system/ploos-appliance-agent.service
     systemctl daemon-reload
     if [ -f "$CONFIG_DIR/appliance.yaml" ]; then
