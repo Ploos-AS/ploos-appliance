@@ -8,6 +8,7 @@ ConditionPathIsDirectory=/data
 Type=oneshot
 RuntimeDirectory=netns crun
 RuntimeDirectoryMode=0755
+EnvironmentFile=-/etc/ploos-appliance/runtime.env
 ExecStart=/usr/local/lib/ploos-appliance/agent
 ExecStop=/usr/local/bin/ploos-appliance stop
 RemainAfterExit=yes
