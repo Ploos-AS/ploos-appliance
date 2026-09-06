@@ -15,7 +15,10 @@ jobs:
         with:
           fetch-depth: 2
       - name: Install test dependencies
-        run: python3 -m pip install --break-system-packages PyYAML jsonschema
+        run: |
+          python3 -m pip install --break-system-packages PyYAML jsonschema
+          sudo apt-get update
+          sudo apt-get install -y podman
       - name: Check shell syntax
         run: |
           sh -n scripts/bootstrap.sh
@@ -34,5 +37,7 @@ jobs:
         run: sh tests/test-host.sh
       - name: Qualify real Docker lifecycle
         run: sh tests/test-oci-runtime.sh docker
+      - name: Qualify real Podman lifecycle
+        run: sh tests/test-oci-runtime.sh podman
       - name: Check whitespace
         run: git diff --check HEAD^
