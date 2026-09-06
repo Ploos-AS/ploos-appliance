@@ -17,6 +17,7 @@ grep -q '^ReadWritePaths=-/var/lib/containers$' "$UNIT"
 grep -q '^ReadWritePaths=-/run/containers$' "$UNIT"
 grep -q '^ReadWritePaths=-/run/libpod$' "$UNIT"
 grep -q '^ReadWritePaths=/run/lock$' "$UNIT"
+grep -q '^ReadWritePaths=-/run/netns$' "$UNIT"
 
 if command -v systemd-analyze >/dev/null 2>&1; then
     created_agent=0
