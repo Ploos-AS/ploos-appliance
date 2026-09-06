@@ -20,6 +20,7 @@ jobs:
         run: |
           sh -n scripts/bootstrap.sh
           sh -n scripts/install.sh
+          sh -n dietpi/Automation_Custom_Script.sh
           sh -n bin/ploos-appliance
           sh -n lib/agent
           sh -n tests/test-host.sh
