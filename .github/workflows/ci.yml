@@ -29,12 +29,15 @@ jobs:
           sh -n test-workload/workload.sh
           sh -n tests/test-host.sh
           sh -n tests/test-oci-runtime.sh
+          sh -n tests/test-systemd-unit.sh
       - name: Check Python syntax
         run: python3 -m py_compile lib/validate-manifest.py
       - name: Check JSON schema syntax
         run: python3 -m json.tool schema/appliance.schema.json >/dev/null
       - name: Run host lifecycle tests
         run: sh tests/test-host.sh
+      - name: Qualify systemd unit
+        run: sh tests/test-systemd-unit.sh
       - name: Qualify real Docker lifecycle
         run: sh tests/test-oci-runtime.sh docker
       - name: Qualify real Podman lifecycle
