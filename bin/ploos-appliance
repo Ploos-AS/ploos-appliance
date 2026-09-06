@@ -16,10 +16,7 @@ fi
 
 runtime() {
     if [ -n "${PLOOS_RUNTIME:-}" ]; then
-        case "$PLOOS_RUNTIME" in
-            podman|docker) printf '%s\n' "$PLOOS_RUNTIME" ;;
-            *) echo "unsupported OCI runtime configured: $PLOOS_RUNTIME" >&2; exit 1 ;;
-        esac
+        printf '%s\n' "$PLOOS_RUNTIME"
     elif command -v podman >/dev/null 2>&1; then
         printf '%s\n' podman
     elif command -v docker >/dev/null 2>&1; then
